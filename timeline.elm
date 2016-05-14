@@ -169,46 +169,49 @@ type Msg = NoOp
             | SearchInput String
             | CurrentTime Time.Time
 
-update : Msg -> Model -> (Model, Platform.Cmd Msg)
+update : Msg -> Model -> (Model, Cmd Msg)
 update action model =
   case action of
     NoOp ->
       ( msgModel "NoOp"
-      , Platform.Cmd.none
+      , Cmd.none
       )
     NewTimeline resultTimeline ->
       case resultTimeline of
         Ok timeline ->
           ( { model | timeline = timeline }
-          , Platform.Cmd.none
+          , Cmd.none
           )
         Err error ->
           ( msgModel (toString error)
-          , Platform.Cmd.none
+          , Cmd.none
           )
     SearchInput search ->
       ( { model | search_value = search }
-      , Platform.Cmd.none
+      , Cmd.none
       )
     CurrentTime time ->
       ( { model | current_time = (Just time) }
-      , Platform.Cmd.none
+      , Cmd.none
       )
 
 
 -- *** Effects ***
-getTime : Effects Msg
+getTime : Cmd Msg
 getTime =
-  TaskTutorial.getCurrentTime -- TODO: commented this import out...
-    |> Task.map CurrentTime
-    |> Effects.task -- TODO: see 'perform' http://package.elm-lang.org/packages/elm-lang/core/4.0.0/Task
+  Cmd.none -- WRONG: Cmd CurrentTime 5
 
-getTimelineJson : String -> Effects Msg
+  -- TaskTutorial.getCurrentTime -- TODO: commented this import out...
+  --   |> Task.map CurrentTime
+  --   |> Effects.task -- TODO: see 'perform' http://package.elm-lang.org/packages/elm-lang/core/4.0.0/Task
+
+getTimelineJson : String -> Cmd Msg
 getTimelineJson query =
     Http.get jsonModel (query)
       |> Task.toResult
       |> Task.map NewTimeline
-      |> Effects.task -- TODO: see 'perform' http://package.elm-lang.org/packages/elm-lang/core/4.0.0/Task
+      |> Task.perform (\x -> NoOp) (\a -> a) -- TODO: The \x -> NoOp is redundant because the previous map line handles this so we always rely on 2nd arg?
+      -- |> Effects.task -- TODO: see 'perform' http://package.elm-lang.org/packages/elm-lang/core/4.0.0/Task
 
 -- *** JSON Decoders ***
 jsonModel : Json.Decoder Timeline
