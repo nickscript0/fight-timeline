@@ -1,14 +1,12 @@
-module Timeline exposing (..)
 -- given a JSON input of events, show a simple visual timeline of text events
+module Timeline exposing (..)
+
 
 import Http
 import Json.Decode as Json exposing ((:=))
 import Task exposing (..)
--- import Effects exposing (..)
--- import Platform exposing (Cmd)
 import Time
 import Date
-
 
 import Html exposing (div, text, h1, input, button, form, fieldset, address, a)
 import Html.Attributes exposing (class, id, type', placeholder, href, style, autofocus)
@@ -16,13 +14,12 @@ import Html.Events exposing (onClick, on, targetValue)
 import Html.Lazy exposing (lazy, lazy2)
 import Html.App
 
--- import TaskTutorial -- TODO: just commented this out?
-
 import Model exposing (FightResult, FightCard, Event, Events, Timeline, Model)
 import SearchEvents exposing (filterWithResult, SearchResult(..), EventSearchResult)
 import Moment
 
 -- *** main ***
+main : Program Never
 main =
   Html.App.program
     { init = init, update = update, view = view, subscriptions = \_ -> Sub.none }
@@ -55,8 +52,8 @@ view_content model search_results =
   div [ class "content" ]
       [ h1 [] [text model.timeline.title]
       , view_today_date model.current_time
-      , view_inputSearch (List.length search_results) -- TODO: Add Lazy2 back
-      , view_timeline search_results model.current_time -- TODO: Add Lazy2? back
+      , lazy view_inputSearch (List.length search_results)
+      , lazy2 view_timeline search_results model.current_time
       ]
 
 view_today_date : Maybe Time.Time -> Html.Html Msg
@@ -158,7 +155,6 @@ view_inputSearch result_count =
         , placeholder ""
         , autofocus True
         , Html.Events.onInput (\s -> SearchInput s)
-        -- , on "input" targetValue (Signal.message address << SearchInput) -- What to do here??? no longer have address
         ]
         []
       ]
@@ -212,7 +208,6 @@ getTimelineJson : String -> Cmd Msg
 getTimelineJson query =
     Http.get jsonModel (query)
       |> Task.toResult
-      -- |> Task.map NewTimeline
       |> Task.perform
         (\x -> GeneralError "Error retrieving timeline.json")
         (\a -> NewTimeline a)
