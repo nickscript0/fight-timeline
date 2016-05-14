@@ -204,21 +204,18 @@ update action model =
 getTime : Cmd Msg
 getTime =
   Time.now
-    -- |> Task.map CurrentTime
-    |> Task.perform (\x -> GeneralError "Couldn't get time") (\a -> CurrentTime a)
-  -- Cmd.none -- WRONG: Cmd CurrentTime 5
-
-  -- TaskTutorial.getCurrentTime -- TODO: commented this import out...
-  --   |> Task.map CurrentTime
-  --   |> Effects.task -- TODO: see 'perform' http://package.elm-lang.org/packages/elm-lang/core/4.0.0/Task
+    |> Task.perform
+      (\x -> GeneralError "Error getting current time")
+      (\a -> CurrentTime a)
 
 getTimelineJson : String -> Cmd Msg
 getTimelineJson query =
     Http.get jsonModel (query)
       |> Task.toResult
-      |> Task.map NewTimeline
-      |> Task.perform (\x -> NoOp) (\a -> a) -- TODO: The \x -> NoOp is redundant because the previous map line handles this so we always rely on 2nd arg?
-      -- |> Effects.task -- TODO: see 'perform' http://package.elm-lang.org/packages/elm-lang/core/4.0.0/Task
+      -- |> Task.map NewTimeline
+      |> Task.perform
+        (\x -> GeneralError "Error retrieving timeline.json")
+        (\a -> NewTimeline a)
 
 -- *** JSON Decoders ***
 jsonModel : Json.Decoder Timeline
