@@ -55,8 +55,8 @@ view_content model search_results =
   div [ class "content" ]
       [ h1 [] [text model.timeline.title]
       , view_today_date model.current_time
-      , lazy2 view_inputSearch (List.length search_results)
-      , lazy2 view_timeline search_results model.current_time
+      , lazy2 (view_inputSearch (List.length search_results))
+      , lazy (view_timeline (search_results model.current_time))
       ]
 
 view_today_date : Maybe Time.Time -> Html.Html Msg
