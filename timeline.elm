@@ -46,7 +46,7 @@ port tasks =
 
 -- *** Model ***
 -- See model.elm
-init : (Model, Effects Action)
+init : (Model, Effects Msg)
 init =
   ( msgModel "Loading..."
   , Effects.batch [ getTimelineJson "data/all_events.json"
@@ -60,14 +60,14 @@ msgModel msg =
   Model (Timeline "Message" [Event Nothing msg "" Nothing "" Nothing]) "" Nothing
 
 -- *** View ***
-view : Address Action -> Model -> Html.Html
+view : Address Msg -> Model -> Html.Html
 view address model =
   model.timeline.events
     |> List.map (filterWithResult model.search_value)
     |> List.filter (\x -> x.result /= NotFound)
     |> view_content address model
 
-view_content : Address Action -> Model -> List EventSearchResult -> Html.Html
+view_content : Address Msg -> Model -> List EventSearchResult -> Html.Html
 view_content address model search_results =
   div [ class "content" ]
       [ h1 [] [text model.timeline.title]
@@ -163,7 +163,7 @@ view_link event =
   a [ href event.url ]
     [ text event.text ]
 
-view_inputSearch : Address Action -> Int -> Html.Html
+view_inputSearch : Address Msg -> Int -> Html.Html
 view_inputSearch address result_count =
   div [ class "search-box" ]
       [
@@ -180,12 +180,12 @@ view_inputSearch address result_count =
       ]
 
 -- *** Update ***
-type Action = NoOp
+type Msg = NoOp
             | NewTimeline (Result Http.Error Timeline)
             | SearchInput String
             | CurrentTime Time.Time
 
-update : Action -> Model -> (Model, Effects Action)
+update : Msg -> Model -> (Model, Effects Msg)
 update action model =
   case action of
     NoOp ->
@@ -213,13 +213,13 @@ update action model =
 
 
 -- *** Effects ***
-getTime : Effects Action
+getTime : Effects Msg
 getTime =
   TaskTutorial.getCurrentTime
     |> Task.map CurrentTime
     |> Effects.task
 
-getTimelineJson : String -> Effects Action
+getTimelineJson : String -> Effects Msg
 getTimelineJson query =
     Http.get jsonModel (query)
       |> Task.toResult
