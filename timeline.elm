@@ -1,13 +1,11 @@
-module Timeline exposing
+module Timeline exposing (..)
 -- given a JSON input of events, show a simple visual timeline of text events
-
--- import Signal.Address
-import Signal exposing (Address)
 
 import Http
 import Json.Decode as Json exposing ((:=))
 import Task exposing (..)
-import Effects exposing(..)
+-- import Effects exposing (..)
+import Platform.Cmd
 import Time
 import Date
 
@@ -46,10 +44,10 @@ port tasks =
 
 -- *** Model ***
 -- See model.elm
-init : (Model, Effects Msg)
+init : (Model, Platform.Cmd Msg)
 init =
   ( msgModel "Loading..."
-  , Effects.batch [ getTimelineJson "data/all_events.json"
+  , Platform.Cmd.batch [ getTimelineJson "data/all_events.json"
                   , getTime
                   ]
   )
@@ -60,19 +58,19 @@ msgModel msg =
   Model (Timeline "Message" [Event Nothing msg "" Nothing "" Nothing]) "" Nothing
 
 -- *** View ***
-view : Address Msg -> Model -> Html.Html
-view address model =
+view : Model -> Html.Html
+view model =
   model.timeline.events
     |> List.map (filterWithResult model.search_value)
     |> List.filter (\x -> x.result /= NotFound)
-    |> view_content address model
+    |> view_content model
 
-view_content : Address Msg -> Model -> List EventSearchResult -> Html.Html
-view_content address model search_results =
+view_content : Model -> List EventSearchResult -> Html.Html
+view_content model search_results =
   div [ class "content" ]
       [ h1 [] [text model.timeline.title]
       , view_today_date model.current_time
-      , lazy2 view_inputSearch address (List.length search_results)
+      , lazy2 view_inputSearch (List.length search_results)
       , lazy2 view_timeline search_results model.current_time
       ]
 
@@ -163,8 +161,8 @@ view_link event =
   a [ href event.url ]
     [ text event.text ]
 
-view_inputSearch : Address Msg -> Int -> Html.Html
-view_inputSearch address result_count =
+view_inputSearch : Int -> Html.Html
+view_inputSearch result_count =
   div [ class "search-box" ]
       [
         div [ class "result-count" ]
@@ -174,7 +172,7 @@ view_inputSearch address result_count =
         , type' "search"
         , placeholder ""
         , autofocus True
-        , on "input" targetValue (Signal.message address << SearchInput)
+        , on "input" targetValue (Signal.message address << SearchInput) -- What to do here??? no longer have address
         ]
         []
       ]
@@ -185,30 +183,30 @@ type Msg = NoOp
             | SearchInput String
             | CurrentTime Time.Time
 
-update : Msg -> Model -> (Model, Effects Msg)
+update : Msg -> Model -> (Model, Platform.Cmd Msg)
 update action model =
   case action of
     NoOp ->
       ( msgModel "NoOp"
-      , Effects.none
+      , Platform.Cmd.none
       )
     NewTimeline resultTimeline ->
       case resultTimeline of
         Ok timeline ->
           ( { model | timeline = timeline }
-          , Effects.none
+          , Platform.Cmd.none
           )
         Err error ->
           ( msgModel (toString error)
-          , Effects.none
+          , Platform.Cmd.none
           )
     SearchInput search ->
       ( { model | search_value = search }
-      , Effects.none
+      , Platform.Cmd.none
       )
     CurrentTime time ->
       ( { model | current_time = (Just time) }
-      , Effects.none
+      , Platform.Cmd.none
       )
 
 
@@ -217,14 +215,14 @@ getTime : Effects Msg
 getTime =
   TaskTutorial.getCurrentTime
     |> Task.map CurrentTime
-    |> Effects.task
+    |> Effects.task -- TODO: see 'perform' http://package.elm-lang.org/packages/elm-lang/core/4.0.0/Task
 
 getTimelineJson : String -> Effects Msg
 getTimelineJson query =
     Http.get jsonModel (query)
       |> Task.toResult
       |> Task.map NewTimeline
-      |> Effects.task
+      |> Effects.task -- TODO: see 'perform' http://package.elm-lang.org/packages/elm-lang/core/4.0.0/Task
 
 -- *** JSON Decoders ***
 jsonModel : Json.Decoder Timeline
