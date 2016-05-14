@@ -1,4 +1,4 @@
-module Timeline where
+module Timeline exposing
 -- given a JSON input of events, show a simple visual timeline of text events
 
 -- import Signal.Address
