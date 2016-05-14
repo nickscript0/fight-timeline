@@ -168,6 +168,7 @@ type Msg = NoOp
             | NewTimeline (Result Http.Error Timeline)
             | SearchInput String
             | CurrentTime Time.Time
+            | GeneralError String
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update action model =
@@ -194,12 +195,18 @@ update action model =
       ( { model | current_time = (Just time) }
       , Cmd.none
       )
-
+    GeneralError s ->
+      ( msgModel s
+      , Cmd.none
+      )
 
 -- *** Effects ***
 getTime : Cmd Msg
 getTime =
-  Cmd.none -- WRONG: Cmd CurrentTime 5
+  Time.now
+    -- |> Task.map CurrentTime
+    |> Task.perform (\x -> GeneralError "Couldn't get time") (\a -> CurrentTime a)
+  -- Cmd.none -- WRONG: Cmd CurrentTime 5
 
   -- TaskTutorial.getCurrentTime -- TODO: commented this import out...
   --   |> Task.map CurrentTime
