@@ -1,5 +1,5 @@
 -- Search functions for Timeline App
-module SearchEvents where
+module SearchEvents exposing (..)
 
 import String exposing(contains, toLower)
 

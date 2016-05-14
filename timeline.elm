@@ -5,7 +5,7 @@ import Http
 import Json.Decode as Json exposing ((:=))
 import Task exposing (..)
 -- import Effects exposing (..)
-import Platform.Cmd
+-- import Platform exposing (Cmd)
 import Time
 import Date
 
@@ -14,40 +14,25 @@ import Html exposing (div, text, h1, input, button, form, fieldset, address, a)
 import Html.Attributes exposing (class, id, type', placeholder, href, style, autofocus)
 import Html.Events exposing (onClick, on, targetValue)
 import Html.Lazy exposing (lazy, lazy2)
+import Html.App
 
-import StartApp
-import TaskTutorial
+-- import TaskTutorial -- TODO: just commented this out?
 
 import Model exposing (FightResult, FightCard, Event, Events, Timeline, Model)
 import SearchEvents exposing (filterWithResult, SearchResult(..), EventSearchResult)
 import Moment
 
 -- *** main ***
-app : { html : Signal Html.Html, model : Signal Model, tasks : Signal (Task Never ()) }
-app =
-  StartApp.start
-    { init = init
-    , update = update
-    , view = view
-    , inputs = []
-    }
-
-main : Signal Html.Html
 main =
-  app.html
-
--- This port is needed as part of the StartApp pattern
-port tasks : Signal (Task.Task Never ())
-port tasks =
-  app.tasks
-
+  Html.App.program
+    { init = init, update = update, view = view, subscriptions = \_ -> Sub.none }
 
 -- *** Model ***
 -- See model.elm
-init : (Model, Platform.Cmd Msg)
+init : (Model, Cmd Msg)
 init =
   ( msgModel "Loading..."
-  , Platform.Cmd.batch [ getTimelineJson "data/all_events.json"
+  , Cmd.batch [ getTimelineJson "data/all_events.json"
                   , getTime
                   ]
   )
@@ -58,14 +43,14 @@ msgModel msg =
   Model (Timeline "Message" [Event Nothing msg "" Nothing "" Nothing]) "" Nothing
 
 -- *** View ***
-view : Model -> Html.Html
+view : Model -> Html.Html Msg
 view model =
   model.timeline.events
     |> List.map (filterWithResult model.search_value)
     |> List.filter (\x -> x.result /= NotFound)
     |> view_content model
 
-view_content : Model -> List EventSearchResult -> Html.Html
+view_content : Model -> List EventSearchResult -> Html.Html Msg
 view_content model search_results =
   div [ class "content" ]
       [ h1 [] [text model.timeline.title]
@@ -74,7 +59,7 @@ view_content model search_results =
       , lazy2 view_timeline search_results model.current_time
       ]
 
-view_today_date : Maybe Time.Time -> Html.Html
+view_today_date : Maybe Time.Time -> Html.Html Msg
 view_today_date maybe_time =
   case maybe_time of
     Just time ->
@@ -93,12 +78,12 @@ view_today_date maybe_time =
     Nothing ->
       text ""
 
-view_timeline : List EventSearchResult -> Maybe Time.Time -> Html.Html
+view_timeline : List EventSearchResult -> Maybe Time.Time -> Html.Html Msg
 view_timeline search_results current_time =
   div [ class "vert-line" ]
       ( List.map (view_event current_time) search_results)
 
-view_event : Maybe Time.Time -> EventSearchResult -> Html.Html
+view_event : Maybe Time.Time -> EventSearchResult -> Html.Html Msg
 view_event current_time esr =
   div [ ]
       [ div [ class "horizontal-timeline" ]
@@ -113,7 +98,7 @@ view_event current_time esr =
           ]
       ]
 
-div_rel_time_tag : Maybe Time.Time -> Maybe Time.Time -> Html.Html
+div_rel_time_tag : Maybe Time.Time -> Maybe Time.Time -> Html.Html Msg
 div_rel_time_tag event_t now_t =
   div [ ("label "
         ++ (if (Moment.isBefore event_t now_t)
@@ -124,13 +109,13 @@ div_rel_time_tag event_t now_t =
       ]
       [ Moment.diffTime event_t now_t |> text ]
 
-div_future_tag : Maybe Time.Time -> Maybe Time.Time -> Html.Html
+div_future_tag : Maybe Time.Time -> Maybe Time.Time -> Html.Html Msg
 div_future_tag event_date current_time =
   if Moment.isBefore current_time event_date
   then div [ class "label label-info tag-inline" ] [text "Future"]
   else div [] []
 
-div_event_result : SearchResult -> Html.Html
+div_event_result : SearchResult -> Html.Html Msg
 div_event_result result =
   case result of
     FightMatch result is_winner ->
@@ -141,7 +126,7 @@ div_event_result result =
     TextMatch -> div [] []
     NotFound -> div [] []
 
-div_vs : FightResult -> Html.Html
+div_vs : FightResult -> Html.Html Msg
 div_vs result =
   div [class "win-loss-value"]
       [ div [class "bold"] [text result.winner]
@@ -151,17 +136,17 @@ div_vs result =
       , div [class "inline"] [text result.result]
       ]
 
-div_win_loss : Bool -> Html.Html
+div_win_loss : Bool -> Html.Html Msg
 div_win_loss is_winner =
   div [class ("win-loss-label label " ++ (if is_winner then "label-success" else "label-danger")) ]
       [text (if is_winner then "Win" else "Loss")]
 
-view_link : Event -> Html.Html
+view_link : Event -> Html.Html Msg
 view_link event =
   a [ href event.url ]
     [ text event.text ]
 
-view_inputSearch : Int -> Html.Html
+view_inputSearch : Int -> Html.Html Msg
 view_inputSearch result_count =
   div [ class "search-box" ]
       [
@@ -172,7 +157,8 @@ view_inputSearch result_count =
         , type' "search"
         , placeholder ""
         , autofocus True
-        , on "input" targetValue (Signal.message address << SearchInput) -- What to do here??? no longer have address
+        , Html.Events.onInput (\s -> SearchInput s)
+        -- , on "input" targetValue (Signal.message address << SearchInput) -- What to do here??? no longer have address
         ]
         []
       ]
@@ -213,7 +199,7 @@ update action model =
 -- *** Effects ***
 getTime : Effects Msg
 getTime =
-  TaskTutorial.getCurrentTime
+  TaskTutorial.getCurrentTime -- TODO: commented this import out...
     |> Task.map CurrentTime
     |> Effects.task -- TODO: see 'perform' http://package.elm-lang.org/packages/elm-lang/core/4.0.0/Task
 
