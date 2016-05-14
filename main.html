@@ -11,10 +11,11 @@
 </head>
 
 <body>
-
+  <div id="app"></div>
   <script type="text/javascript" src="timeline.js"></script>
   <script type="text/javascript">
-    var app = Elm.fullscreen(Elm.Timeline);
+    var app_node = document.getElementById('app');
+    Elm.Timeline.embed(app_node);
   </script>
 </body>
 
