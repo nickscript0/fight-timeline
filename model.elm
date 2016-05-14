@@ -1,5 +1,5 @@
 -- Model for Timeline App
-module Model where
+module Model exposing (..)
 
 import Time
 

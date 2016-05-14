@@ -1,5 +1,5 @@
 -- Time manipulation library modeled off Moment.js
-module Moment where
+module Moment exposing (..)
 
 import Date exposing (..)
 import Time
