@@ -85,12 +85,11 @@ view_event current_time esr =
       [ div [ class "horizontal-timeline" ]
             [ text esr.event.date
             , div_rel_time_tag esr.event.time_type current_time
-            , div_future_tag esr.event.time_type current_time
             ]
       , div
           [ class "event-block" ]
           [ if esr.event.url /= "" then view_link esr.event else text esr.event.text
-          , div_event_result esr.result
+          , div_event_result esr.result (Moment.isBefore current_time esr.event.time_type)
           ]
       ]
 
@@ -105,37 +104,38 @@ div_rel_time_tag event_t now_t =
       ]
       [ Moment.diffTime event_t now_t |> text ]
 
-div_future_tag : Maybe Time.Time -> Maybe Time.Time -> Html.Html Msg
-div_future_tag event_date current_time =
-  if Moment.isBefore current_time event_date
-  then div [ class "label label-info tag-inline" ] [text "Future"]
-  else div [] []
-
-div_event_result : SearchResult -> Html.Html Msg
-div_event_result result =
+div_event_result : SearchResult -> Bool -> Html.Html Msg
+div_event_result result is_future =
   case result of
     FightMatch result is_winner ->
       div [ class "fight-result" ]
-          [ div_win_loss is_winner
-          , div_vs result
+          [ div_win_loss is_winner is_future
+          , div_vs result is_future
           ]
     TextMatch -> div [] []
     NotFound -> div [] []
 
-div_vs : FightResult -> Html.Html Msg
-div_vs result =
+div_vs : FightResult -> Bool -> Html.Html Msg
+div_vs result is_future =
   div [class "win-loss-value"]
       [ div [class "bold"] [text result.winner]
-      , text " defeated "
+      , text (if is_future then " fights " else " defeated ")
       , div [class "bold"] [text result.loser]
-      , text " by "
+      , text (if is_future then "" else " by ")
       , div [class "inline"] [text result.result]
       ]
 
-div_win_loss : Bool -> Html.Html Msg
-div_win_loss is_winner =
-  div [class ("win-loss-label label " ++ (if is_winner then "label-success" else "label-danger")) ]
-      [text (if is_winner then "Win" else "Loss")]
+div_win_loss : Bool -> Bool -> Html.Html Msg
+div_win_loss is_winner is_future =
+  if is_future then
+    div [class "win-loss-label label label-info"]
+        [text "Upcoming"]
+  else if is_winner then
+    div [class "win-loss-label label label-success"]
+        [text "Win"]
+  else
+    div [class "win-loss-label label label-danger"]
+        [text "Loss"]
 
 view_link : Event -> Html.Html Msg
 view_link event =
