@@ -62,6 +62,7 @@ monthNum month =
         |> List.indexedMap (\i el -> (,) i (el == month))
         |> List.filter (\x -> snd x)
         |> List.map (\x -> fst x)
+        |> List.map (\x -> x + 1)
         |> List.head
   in  case maybe_month of
         Just month_num ->

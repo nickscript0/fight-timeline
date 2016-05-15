@@ -63,8 +63,7 @@ view_today_date maybe_time =
       let t = Date.fromTime time
       in
           div []
-              [ "Raw time: " ++ toString (Time.inSeconds time) ++ " - " ++
-                "Date: " ++ toString (Date.year t) ++
+              [ "Generated on " ++ toString (Date.year t) ++
                 "-" ++ Moment.monthNum (Date.month t) ++
                 "-" ++ toString (Date.day t) ++
                 " " ++ toString (Date.hour t) ++
