@@ -9,7 +9,7 @@ import Time
 import Date
 
 import Html exposing (div, text, h1, input, button, form, fieldset, address, a)
-import Html.Attributes exposing (class, id, type', placeholder, href, style, autofocus)
+import Html.Attributes exposing (class, id, type', placeholder, href, style, autofocus, title)
 import Html.Events exposing (onClick, on, targetValue)
 import Html.Lazy exposing (lazy, lazy2)
 import Html.App
@@ -83,26 +83,27 @@ view_event : Maybe Time.Time -> EventSearchResult -> Html.Html Msg
 view_event current_time esr =
   div [ ]
       [ div [ class "horizontal-timeline" ]
-            [ text esr.event.date
-            , div_rel_time_tag esr.event.time_type current_time
+            [ if esr.event.url /= "" then view_link esr.event else text esr.event.text
+            , div_rel_time_tag esr.event current_time
             ]
       , div
           [ class "event-block" ]
-          [ if esr.event.url /= "" then view_link esr.event else text esr.event.text
-          , div_event_result esr.result (Moment.isBefore current_time esr.event.time_type)
+          [
+            div_event_result esr.result (Moment.isBefore current_time esr.event.time_type)
           ]
       ]
 
-div_rel_time_tag : Maybe Time.Time -> Maybe Time.Time -> Html.Html Msg
-div_rel_time_tag event_t now_t =
+div_rel_time_tag : Event -> Maybe Time.Time -> Html.Html Msg
+div_rel_time_tag event now_t =
   div [ ("label "
-        ++ (if (Moment.isBefore event_t now_t)
+        ++ (if (Moment.isBefore event.time_type now_t)
             then "label-default"
             else "label-warning")
         ++ " tag-inline")
           |> class
+      , title event.date
       ]
-      [ Moment.diffTime event_t now_t |> text ]
+      [ Moment.diffTime event.time_type now_t |> text ]
 
 div_event_result : SearchResult -> Bool -> Html.Html Msg
 div_event_result result is_future =
