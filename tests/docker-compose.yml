@@ -1,0 +1,5 @@
+tests:
+  build: .
+  dockerfile: Dockerfile-ubuntu
+  volumes:
+    - .:/workdir
