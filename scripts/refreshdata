@@ -1,3 +1,3 @@
 #!/bin/sh
 cd /workdir
-python get_ufc_events.py > /static/events.json
+python get_ufc_events.py > /static/all_events.json

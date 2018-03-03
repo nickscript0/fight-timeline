@@ -16,6 +16,5 @@ COPY timeline.js /static/
 
 # Run twice a day: 12:18am and 12:18pm
 RUN echo '18 */12 * * *    /workdir/refreshdata' > /etc/crontabs/root
-RUN /workdir/refreshdata
 
-CMD crond -l 2 -f
+CMD /workdir/refreshdata && crond -l 2 -f

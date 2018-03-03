@@ -94,7 +94,7 @@ view_today_date maybe_time maybe_last_updated =
                         ++ toString (Date.minute t)
                         ++ ":"
                         ++ toString (Date.second t)
-                        ++ " - "
+                        ++ " | "
                         ++ "Database updated: "
                         ++ Moment.diffTime maybe_last_updated maybe_time
                         |> text
