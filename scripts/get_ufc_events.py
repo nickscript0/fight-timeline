@@ -25,9 +25,10 @@ def main():
     output = OrderedDict((
         ('title', 'UFC Events'),
         ('events', get_events()),
-        ('last_updated', int(time.time() * 1000))
+        ('last_updated', str(int(time.time() * 1000)))
     ))
     print(json.dumps(output, indent=2))
+    debug(time.strftime("%c") + ': Completed')
 
 
 def get_events():
