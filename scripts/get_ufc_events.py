@@ -1,8 +1,7 @@
 """
 Retrieve timeline of UFC events from wikipedia and output as json.
-
-TODO: sanitize inputs (e.g. could be vulnerable to XSS)
 """
+
 # pip install bs4
 from bs4 import BeautifulSoup
 import json
