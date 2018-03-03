@@ -35,6 +35,7 @@ type alias Events =
 type alias Timeline =
     { title : String
     , events : Events
+    , last_updated: String
     }
 
 

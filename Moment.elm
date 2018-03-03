@@ -5,6 +5,7 @@ module Moment exposing (..)
 
 import Date exposing (..)
 import Time
+import String
 
 
 -- Public Functions
@@ -75,6 +76,17 @@ rel seconds =
             Nothing ->
                 "Error: unable to calculate dates"
 
+
+epochSecondsToTime: String -> Maybe Time.Time
+epochSecondsToTime epochSeconds =
+    let
+        res = String.toFloat epochSeconds
+    in 
+        case res of
+            Ok value ->
+                Just value
+            Err error ->
+                Nothing
 
 
 -- This should be added to the official Date library or in its own module

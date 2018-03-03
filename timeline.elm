@@ -48,7 +48,7 @@ init =
 
 msgModel : String -> Model
 msgModel msg =
-    Model (Timeline "Message" [ Event Nothing msg "" Nothing "" Nothing ]) "" Nothing
+    Model (Timeline "Message" [ Event Nothing msg "" Nothing "" Nothing ] "") "" Nothing
 
 
 
@@ -67,21 +67,21 @@ view_content : Model -> List EventSearchResult -> Html.Html Msg
 view_content model search_results =
     div [ class "content" ]
         [ h1 [] [ text model.timeline.title ]
-        , view_today_date model.current_time
+        , view_today_date model.current_time (Moment.epochSecondsToTime model.timeline.last_updated)
         , lazy view_inputSearch (List.length search_results)
         , lazy2 view_timeline search_results model.current_time
         ]
 
 
-view_today_date : Maybe Time.Time -> Html.Html Msg
-view_today_date maybe_time =
+view_today_date : Maybe Time.Time -> Maybe Time.Time -> Html.Html Msg
+view_today_date maybe_time maybe_last_updated =
     case maybe_time of
         Just time ->
             let
                 t =
                     Date.fromTime time
             in
-                div []
+                div [ class "timestamp" ]
                     [ "Generated on "
                         ++ toString (Date.year t)
                         ++ "-"
@@ -94,6 +94,9 @@ view_today_date maybe_time =
                         ++ toString (Date.minute t)
                         ++ ":"
                         ++ toString (Date.second t)
+                        ++ " - "
+                        ++ "Database updated: "
+                        ++ Moment.diffTime maybe_last_updated maybe_time
                         |> text
                     ]
 
@@ -293,9 +296,10 @@ jsonModel =
 
 rootDecoder : Json.Decoder Event -> Json.Decoder Timeline
 rootDecoder event =
-    Json.object2 (\t e -> Timeline t e)
+    Json.object3 (\t e lu -> Timeline t e lu)
         ("title" := Json.string)
         ("events" := (Json.list event))
+        ("last_updated" := Json.string)
 
 
 eventDecoder : Json.Decoder Event
