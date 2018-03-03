@@ -36,7 +36,7 @@ init : ( Model, Cmd Msg )
 init =
     ( msgModel "Loading..."
     , Cmd.batch
-        [ getTimelineJson "data/all_events.json"
+        [ getTimelineJson "all_events.json"
         , getTime
         ]
     )

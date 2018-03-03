@@ -9,6 +9,7 @@ import sys
 import shelve
 import logging
 from collections import OrderedDict
+import time
 
 from async_request import async_urlopen
 
@@ -23,7 +24,8 @@ NUM_PARALLEL_REQUESTS = 20
 def main():
     output = OrderedDict((
         ('title', 'UFC Events'),
-        ('events', get_events())
+        ('events', get_events()),
+        ('last_updated', int(time.time() * 1000))
     ))
     print(json.dumps(output, indent=2))
 

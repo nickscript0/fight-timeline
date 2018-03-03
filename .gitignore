@@ -1,0 +1,6 @@
+*.js
+data/
+notes.txt
+*.pyc
+elm-stuff/
+all_events.json

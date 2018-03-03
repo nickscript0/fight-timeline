@@ -1,0 +1,3 @@
+#!/bin/sh
+cd /workdir
+python get_ufc_events.py > /static/events.json
