@@ -37,26 +37,44 @@ def get_events():
     event_list_page = request.getOne(EVENTS_URL)
 
     future_events = EventsListPage.getFutureEvents(event_list_page)
-    future_events_results = _get_event_details(request, future_events)
+    future_events_results = _get_event_details_sequential(request, future_events)
 
     past_events = EventsListPage.getPastEvents(event_list_page)
-    past_events_results = _get_event_details(request_cache, past_events)
+    past_events_results = _get_event_details_sequential(request_cache, past_events)
 
     request.close()
     return future_events_results + past_events_results
 
 
-def _get_event_details(request_obj, events_list):
+# def _get_event_details(request_obj, events_list):
+#     """
+#     Given a list of dictionary events, add a 'fight_card' field with the event
+#     details.
+#     """
+#     event_urls = [e['event_url']
+#                   for e in events_list if e['event_url'] is not None]
+#     events_data = iter(request_obj.getMany(event_urls))
+#     for e in events_list:
+#         if e['event_url'] is not None:
+#             e['fight_card'] = EventPage.getJson(e['text'], next(events_data))
+#         else:
+#             e['fight_card'] = None
+
+#     return events_list
+
+# Using sequential as the container was running out of memory on gcloud free tier
+# TODO:
+#  - Could request 20 at a time or so at a time (instead of all as was before)
+#  - Cache should store the minimal parsed json object (instead of the entire page)
+def _get_event_details_sequential(request_obj, events_list):
     """
     Given a list of dictionary events, add a 'fight_card' field with the event
     details.
     """
-    event_urls = [e['event_url']
-                  for e in events_list if e['event_url'] is not None]
-    events_data = iter(request_obj.getMany(event_urls))
     for e in events_list:
         if e['event_url'] is not None:
-            e['fight_card'] = EventPage.getJson(e['text'], next(events_data))
+            res = request_obj.getOne(e['event_url'])
+            e['fight_card'] = EventPage.getJson(e['text'], res)
         else:
             e['fight_card'] = None
 
