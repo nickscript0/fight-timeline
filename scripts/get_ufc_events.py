@@ -225,7 +225,7 @@ class RequestCache:
 
     def __init__(self, use_cache=True):
         self.use_cache = use_cache
-        self.cache = shelve.open('bs_cache.shelve') if use_cache else {}
+        self.cache = shelve.open('/shelve-cache/bs_cache.shelve') if use_cache else {}
 
     def getOne(self, url=EVENTS_URL):
         if url not in self.cache:

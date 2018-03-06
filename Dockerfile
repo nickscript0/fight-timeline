@@ -13,8 +13,9 @@ COPY scripts/get_ufc_events.py /workdir/
 COPY index.html /static/
 COPY main.css /static/
 COPY timeline.js /static/
+
 # Cache the python request cache in a volume
-VOLUME ["/workdir"]
+VOLUME ["/shelve-cache"]
 
 # Run twice a day: 12:18am and 12:18pm
 RUN echo '18 */12 * * *    /workdir/refreshdata' > /etc/crontabs/root
