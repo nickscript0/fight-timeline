@@ -230,8 +230,6 @@ class RequestCache:
     def getOne(self, url=EVENTS_URL):
         if url not in self.cache:
             self.cache[url] = async_urlopen([url])[0]
-        else:
-            debug('Cache hit: ' + url)
         return BeautifulSoup(self.cache[url], "html.parser")
 
     def getMany(self, urls):
