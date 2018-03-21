@@ -1,0 +1,14 @@
+FROM ubuntu:14.04
+RUN apt-get update
+RUN apt-get install -y curl
+RUN curl -sL https://deb.nodesource.com/setup_6.x | sudo -E bash -
+RUN apt-get install -y nodejs
+RUN apt-get install -y git libgmp-dev # elm-package deps
+
+RUN npm install -g elm
+RUN npm install -g elm-test
+
+RUN elm-package install -y
+#RUN pushd tests && elm-package install -y && popd
+
+WORKDIR /workdir

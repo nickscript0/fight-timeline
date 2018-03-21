@@ -1,8 +1,7 @@
 """
 Retrieve timeline of UFC events from wikipedia and output as json.
-
-TODO: sanitize inputs (e.g. could be vulnerable to XSS)
 """
+
 # pip install bs4
 from bs4 import BeautifulSoup
 import json
@@ -10,6 +9,7 @@ import sys
 import shelve
 import logging
 from collections import OrderedDict
+import time
 
 from async_request import async_urlopen
 
@@ -24,36 +24,57 @@ NUM_PARALLEL_REQUESTS = 20
 def main():
     output = OrderedDict((
         ('title', 'UFC Events'),
-        ('events', get_events())
+        ('events', get_events()),
+        ('last_updated', str(int(time.time() * 1000)))
     ))
     print(json.dumps(output, indent=2))
+    debug(time.strftime("%c") + ': Completed')
 
 
 def get_events():
-    request = RequestCache()
+    request_cache = RequestCache()
+    request = RequestCache(use_cache=False)
     event_list_page = request.getOne(EVENTS_URL)
 
     future_events = EventsListPage.getFutureEvents(event_list_page)
-    future_events_results = _get_event_details(request, future_events)
+    future_events_results = _get_event_details_sequential(request, future_events)
 
     past_events = EventsListPage.getPastEvents(event_list_page)
-    past_events_results = _get_event_details(request, past_events)
+    past_events_results = _get_event_details_sequential(request_cache, past_events)
 
     request.close()
     return future_events_results + past_events_results
 
 
-def _get_event_details(request_obj, events_list):
+# def _get_event_details(request_obj, events_list):
+#     """
+#     Given a list of dictionary events, add a 'fight_card' field with the event
+#     details.
+#     """
+#     event_urls = [e['event_url']
+#                   for e in events_list if e['event_url'] is not None]
+#     events_data = iter(request_obj.getMany(event_urls))
+#     for e in events_list:
+#         if e['event_url'] is not None:
+#             e['fight_card'] = EventPage.getJson(e['text'], next(events_data))
+#         else:
+#             e['fight_card'] = None
+
+#     return events_list
+
+# Using sequential as the container was running out of memory on gcloud free tier
+# TODO:
+#  - Could request 20 at a time or so at a time (instead of all as was before)
+#  - Cache should store the minimal parsed json object (instead of the entire page)
+def _get_event_details_sequential(request_obj, events_list):
     """
     Given a list of dictionary events, add a 'fight_card' field with the event
     details.
     """
-    event_urls = [e['event_url']
-                  for e in events_list if e['event_url'] is not None]
-    events_data = iter(request_obj.getMany(event_urls))
     for e in events_list:
         if e['event_url'] is not None:
-            e['fight_card'] = EventPage.getJson(e['text'], next(events_data))
+            res = request_obj.getOne(e['event_url'])
+            e['fight_card'] = EventPage.getJson(e['text'], res)
         else:
             e['fight_card'] = None
 
@@ -84,7 +105,7 @@ class EventPage:
 
         # Special case where event is on a "2012_in_UFC" aggregated page
         if title.text.lower().endswith('in ufc'):
-            debug("Title={}".format(title.text))
+            # debug("Title={}".format(title.text))
             headlines = data.findAll('span', attrs={'class': 'mw-headline'})
             headline = [x for x in headlines if x.text == event_title]
             table = headline[0].find_next(
@@ -202,19 +223,21 @@ def _getTextAndLink(el):
 
 class RequestCache:
 
-    def __init__(self):
-        self.cache = shelve.open('bs_cache.shelve')
+    def __init__(self, use_cache=True):
+        self.use_cache = use_cache
+        self.cache = shelve.open('/shelve-cache/bs_cache.shelve') if use_cache else {}
 
     def getOne(self, url=EVENTS_URL):
         if url not in self.cache:
             self.cache[url] = async_urlopen([url])[0]
-        else:
-            debug('Cache hit: ' + url)
         return BeautifulSoup(self.cache[url], "html.parser")
 
     def getMany(self, urls):
         not_cached_urls = [x for x in urls if (x not in self.cache)]
         responses = []
+        count_cache_hits = len(urls) - len(not_cached_urls)
+        if count_cache_hits > 0:
+            debug('{}/{} cache hits'.format(count_cache_hits, len(urls)))
         if len(not_cached_urls) > 0:
             responses = async_urlopen(not_cached_urls, NUM_PARALLEL_REQUESTS)
         for req, res in zip(not_cached_urls, responses):
@@ -223,7 +246,8 @@ class RequestCache:
         return [BeautifulSoup(self.cache[x], "html.parser") for x in urls]
 
     def close(self):
-        self.cache.close()
+        if self.use_cache:
+            self.cache.close()
 
 
 def debug(s):

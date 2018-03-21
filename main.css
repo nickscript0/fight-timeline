@@ -1,63 +1,81 @@
 h1 {
-  text-align: center;
+    text-align: center;
 }
+
 .content {
-  text-align: center;
+    text-align: center;
 }
+
 .event-block {
-  text-align: left;
-  display: inline-block;
-  padding-left: 1em;
-  padding-bottom: 2em;
+    text-align: left;
+    display: inline-block;
+    padding-left: 1em;
+    padding-bottom: 2em;
 }
+
 .vert-line {
-  border-left: 1px solid black;
-  height: 100%;
-  margin-left: 1em;
-  /*padding-left: 1em;*/
-  text-align: left;
+    border-left: 1px solid black;
+    height: 100%;
+    margin-left: 1em;
+    /*padding-left: 1em;*/
+    text-align: left;
 }
+
 .horizontal-timeline {
-  display: inline-block;
-  /*height: 1px;*/
-  border: 0;
-  border-bottom: 1px solid #ccc;
-  /*margin: 1em 0;*/
-  padding-left: 1em;
-  width: 30em;
-  display: block;
-  font-weight: bold;
+    display: inline-block;
+    /*height: 1px;*/
+    border: 0;
+    border-bottom: 1px solid #ccc;
+    /*margin: 1em 0;*/
+    padding-left: 1em;
+    width: 30em;
+    display: block;
+    font-weight: bold;
 }
+
 .search-box {
-  text-align: center;
-  display: inline-block;
-  width: 100%;
+    text-align: center;
+    display: inline-block;
+    width: 100%;
 }
+
 .search-input {
-  width: 30%;
+    width: 30%;
 }
+
 .result-count {
-  display: inline-block;
-  padding-right: 10px;
+    display: inline-block;
+    padding-right: 10px;
 }
+
 .win-loss-label {
-  margin-right: 5px;
-  display: inline-block;
+    margin-right: 5px;
+    display: inline-block;
 }
+
 .win-loss-value {
-  display: inline-block;
-  padding-top: 1px;
+    display: inline-block;
+    padding-top: 1px;
 }
+
 .tag-inline {
-  display: inline;
-  margin-left: 5px;
-  padding-bottom: 1px;
-  padding-top: 1px;
+    display: inline;
+    margin-left: 5px;
+    padding-bottom: 1px;
+    padding-top: 1px;
 }
+
 .bold {
-  font-weight: bold;
-  display: inline-block;
+    font-weight: bold;
+    display: inline-block;
 }
+
 .inline {
-  display: inline-block;
+    display: inline-block;
+}
+
+.timestamp {
+    font-family: monospace;
+    font-size: 80%;
+    margin-bottom: 5px;
 }
