@@ -13,6 +13,10 @@ import time
 
 from async_request import async_urlopen
 
+# Necessary to increase recursion limit so BeautifulSoup object can be stored in a shelve
+# otherwise: RecursionError: maximum recursion depth exceeded while getting the str of an object
+sys.setrecursionlimit(50000)
+
 logging.getLogger('async_request').addHandler(logging.StreamHandler())
 logging.getLogger('async_request').setLevel(logging.DEBUG)
 
@@ -65,7 +69,6 @@ def get_events():
 # Using sequential as the container was running out of memory on gcloud free tier
 # TODO:
 #  - Could request 20 at a time or so at a time (instead of all as was before)
-#  - Cache should store the minimal parsed json object (instead of the entire page)
 def _get_event_details_sequential(request_obj, events_list):
     """
     Given a list of dictionary events, add a 'fight_card' field with the event
@@ -229,8 +232,8 @@ class RequestCache:
 
     def getOne(self, url=EVENTS_URL):
         if url not in self.cache:
-            self.cache[url] = async_urlopen([url])[0]
-        return BeautifulSoup(self.cache[url], "html.parser")
+            self.cache[url] = BeautifulSoup(async_urlopen([url])[0], "html.parser")
+        return self.cache[url]
 
     def getMany(self, urls):
         not_cached_urls = [x for x in urls if (x not in self.cache)]
@@ -241,9 +244,9 @@ class RequestCache:
         if len(not_cached_urls) > 0:
             responses = async_urlopen(not_cached_urls, NUM_PARALLEL_REQUESTS)
         for req, res in zip(not_cached_urls, responses):
-            self.cache[req] = res
+            self.cache[req] = BeautifulSoup(res, "html.parser")
 
-        return [BeautifulSoup(self.cache[x], "html.parser") for x in urls]
+        return [self.cache[x] for x in urls]
 
     def close(self):
         if self.use_cache:
