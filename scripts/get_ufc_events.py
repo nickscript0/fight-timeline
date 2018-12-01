@@ -179,7 +179,7 @@ class EventsListPage:
 
     @staticmethod
     def _parseFutureRow(row):
-        event, date, venue, location = row.findAll('td')
+        event, date, venue, location, ref = row.findAll('td')
 
         date = EventsListPage._parseDateSpan(date)
         text, link = _getTextAndLink(event)
@@ -195,7 +195,7 @@ class EventsListPage:
 
     @staticmethod
     def _parsePastRow(row):
-        num, event, date, venue, location, attendance = row.findAll(  # pylint: disable=W0612
+        num, event, date, venue, location, attendance, ref = row.findAll(  # pylint: disable=W0612
             'td')
 
         date = EventsListPage._parseDateSpan(date)
