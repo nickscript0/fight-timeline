@@ -14,7 +14,7 @@ docker run --name fight-timeline-nginx -v ${PWD}:/usr/share/nginx/html:ro -p 123
 ## Retrieve data
 ```bash
 cd scripts
-docker-compose run main /bin/sh
+docker-compose run --rm main /bin/sh
 python get_ufc_events.py > events.json
 # exit the container and `cp events.json ../data/all_events.json
 ```
