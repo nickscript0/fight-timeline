@@ -127,9 +127,12 @@ class EventPage:
             return None
 
         try:
-            # weight, winner, _, loser, result, rounds, time, notes
+            numExpectedItems = 7
+            items = tds[:numExpectedItems]
+            # Pad items with default val if there are less, to gracefully handle some rows that were missing cols
+            items.extend([''] * (numExpectedItems - len(items)))
             weight, winner, _, loser, result, \
-                rounds, time = tds[:7]  # pylint: disable=W0612
+                rounds, time = items  # pylint: disable=W0612
         except ValueError:
             debug(row)
             raise
@@ -179,7 +182,7 @@ class EventsListPage:
 
     @staticmethod
     def _parseFutureRow(row):
-        event, date, venue, location, ref = row.findAll('td')
+        event, date, venue, location, ref, notes = row.findAll('td')
 
         date = EventsListPage._parseDateSpan(date)
         text, link = _getTextAndLink(event)

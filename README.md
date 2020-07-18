@@ -15,6 +15,11 @@ docker run --name fight-timeline-nginx -v ${PWD}:/usr/share/nginx/html:ro -p 123
 ```bash
 cd scripts
 docker-compose run --rm main /bin/sh
+
+# Segmentation fault was occurring after the script was partway run with the default ulimit of 8192
+# Doubling it did the trick, this does not work in a Dockerfile likely needs to be run in entrypoint script
+ulimit -s 16384
+
 python get_ufc_events.py > events.json
 # exit the container and `cp events.json ../data/all_events.json
 ```
