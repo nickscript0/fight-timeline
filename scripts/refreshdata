@@ -1,3 +1,7 @@
 #!/bin/sh
+
+# Increase stack for python as it was segfaulting - July 18, 2020
+ulimit -s 16348
+
 cd /workdir
 python get_ufc_events.py > /static/all_events.json
