@@ -2,3 +2,4 @@ main:
   build: .
   volumes:
     - .:/src
+    - .:/shelve-cache

@@ -19,11 +19,35 @@ sys.setrecursionlimit(50000)
 
 logging.getLogger('async_request').addHandler(logging.StreamHandler())
 logging.getLogger('async_request').setLevel(logging.DEBUG)
+logging.getLogger(__name__).addHandler(logging.StreamHandler())
+logging.getLogger(__name__).setLevel(logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 EVENTS_URL = 'https://en.wikipedia.org/wiki/List_of_UFC_events'
 BASE_URL = 'https://en.wikipedia.org'
 NUM_PARALLEL_REQUESTS = 20
 
+class Timer:
+    def __init__(self):
+        self.start = time.time()
+        self.times = []
+    
+    def event(self, name):
+        now = time.time()
+
+        logger.info(name + ': ' + str(now-self.start) + 'ms')
+        self.start = now
+
+    def init(self):
+        self.start = time.time()
+
+    def add(self):
+        now = time.time()
+        self.times.append(now - self.start)
+        self.start = now
+
+    def total(self, name):
+        logger.info(name + ': calls=' + str(len(self.times)) + ' total_time=' + str(sum(self.times)) + 'ms')
 
 def main():
     output = OrderedDict((
@@ -37,15 +61,18 @@ def main():
 
 def get_events():
     request_cache = RequestCache()
+    t = Timer()
     request = RequestCache(use_cache=False)
     event_list_page = request.getOne(EVENTS_URL)
-
+    t.event('request events_url')
     future_events = EventsListPage.getFutureEvents(event_list_page)
+    t.event('getFutureEvents')
     future_events_results = _get_event_details_sequential(request, future_events)
-
+    t.event('_get_event_details_sequential(future_events)')
     past_events = EventsListPage.getPastEvents(event_list_page)
+    t.event('getPastEvents')
     past_events_results = _get_event_details_sequential(request_cache, past_events)
-
+    t.event('_get_event_details_sequential(past_events)')
     request.close()
     return future_events_results + past_events_results
 
@@ -74,13 +101,25 @@ def _get_event_details_sequential(request_obj, events_list):
     Given a list of dictionary events, add a 'fight_card' field with the event
     details.
     """
+    t = Timer()
+    a = Timer()
     for e in events_list:
         if e['event_url'] is not None:
+            a.init()
             res = request_obj.getOne(e['event_url'])
-            e['fight_card'] = EventPage.getJson(e['text'], res)
+            a.add()
+            t.init()
+            parsed_page = request_obj.getEventPage(res)
+            if parsed_page is None:
+                # logger.info('CACHE MISS')
+                parsed_page = EventPage.getJson(e['text'], res)
+                request_obj.setEventPage(res, parsed_page)
+            t.add()
+            e['fight_card'] = parsed_page
         else:
             e['fight_card'] = None
-
+    a.total('events_list loop p1')
+    t.total('events_list loop p2')
     return events_list
 
 
@@ -103,6 +142,7 @@ class EventPage:
 
     @staticmethod
     def _getTable(event_title, data):
+        logger.info('data type is ' + str(type(data)) )
         title = data.find('h1', attrs={'id': 'firstHeading'})
         table = None
 
@@ -223,17 +263,38 @@ def _getTextAndLink(el):
         text = el.text
     return (text, link)
 
+import hashlib
+print(hashlib.md5("whatever your string is".encode('utf-8')).hexdigest())
 
 class RequestCache:
 
     def __init__(self, use_cache=True):
         self.use_cache = use_cache
         self.cache = shelve.open('/shelve-cache/bs_cache.shelve') if use_cache else {}
+        self.event_cache = shelve.open('/shelve-cache/event_cache.shelve') if use_cache else {}
+
+    @staticmethod
+    def _page_hash(page_text):
+        return str(len(str(page_text)))
+        # page_text = str(page_text)
+        # return hashlib.md5(page_text.encode('utf-8')).hexdigest()
+
+    def getEventPage(self, page_text_bs):
+        h = self._page_hash(page_text_bs)
+        return self.event_cache[h] if h in self.event_cache else None
+
+    def setEventPage(self, page_text_bs, page_value):
+        h = self._page_hash(page_text_bs)
+        self.event_cache[h] = page_value
 
     def getOne(self, url=EVENTS_URL):
         if url not in self.cache:
-            self.cache[url] = BeautifulSoup(async_urlopen([url])[0], "html.parser")
-        return self.cache[url]
+            bs = BeautifulSoup(async_urlopen([url])[0], "html.parser")
+            self.cache[url] = bs
+            return bs
+        ret = self.cache[url]
+        return ret
+        
 
     def getMany(self, urls):
         not_cached_urls = [x for x in urls if (x not in self.cache)]
