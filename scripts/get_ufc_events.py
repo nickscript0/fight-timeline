@@ -127,12 +127,7 @@ class EventPage:
             return None
 
         try:
-            numExpectedItems = 7
-            items = tds[:numExpectedItems]
-            # Pad items with default val if there are less, to gracefully handle some rows that were missing cols
-            items.extend([''] * (numExpectedItems - len(items)))
-            weight, winner, _, loser, result, \
-                rounds, time = items  # pylint: disable=W0612
+            weight, winner, _, loser, result, rounds, time = extractItemsPad(tds, 7)
         except ValueError:
             debug(row)
             raise
@@ -147,6 +142,13 @@ class EventPage:
             ('weight_class', weight.text)
         ))
 
+
+def extractItemsPad(actualItems, numExpected):
+    """ Pad items with default val if there are less, to gracefully handle some rows that were missing cols """
+
+    items = actualItems[:numExpected]
+    items.extend([''] * (numExpected - len(items)))
+    return items
 
 class EventsListPage:
 
@@ -182,7 +184,7 @@ class EventsListPage:
 
     @staticmethod
     def _parseFutureRow(row):
-        event, date, venue, location, ref, notes = row.findAll('td')
+        event, date, venue, location, ref, notes = extractItemsPad(row.findAll('td'), 6)
 
         date = EventsListPage._parseDateSpan(date)
         text, link = _getTextAndLink(event)
@@ -192,14 +194,14 @@ class EventsListPage:
             ('text', text),
             ('date', date.text),
             ('venue', venue.text),
-            ('location', location.text),
+            ('location', location.text if hasattr(location, 'text') else ''),
             ('event_url', link)
         ))
 
     @staticmethod
     def _parsePastRow(row):
-        num, event, date, venue, location, attendance, ref = row.findAll(  # pylint: disable=W0612
-            'td')
+        num, event, date, venue, location, attendance, ref = extractItemsPad(row.findAll(  # pylint: disable=W0612
+            'td'), 7)
 
         date = EventsListPage._parseDateSpan(date)
         text, link = _getTextAndLink(event)
@@ -210,7 +212,7 @@ class EventsListPage:
             ('text', text),
             ('date', date.text),
             ('venue', venue.text),
-            ('location', location.text),
+            ('location', location.text if hasattr(location, 'text') else ''),
             ('event_url', link)
         ))
 
