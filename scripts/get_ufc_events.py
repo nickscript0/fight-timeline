@@ -192,8 +192,8 @@ class EventsListPage:
 
         return OrderedDict((
             ('text', text),
-            ('date', date.text),
-            ('venue', venue.text),
+            ('date', date.text if date else ''),
+            ('venue', venue.text if venue else ''),
             ('location', location.text if hasattr(location, 'text') else ''),
             ('event_url', link)
         ))
