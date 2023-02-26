@@ -5,3 +5,8 @@ notes.txt
 elm-stuff/
 all_events.json
 build-and-push.sh
+
+
+# Added by cargo
+
+/target
