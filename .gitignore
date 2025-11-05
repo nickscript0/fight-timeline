@@ -9,4 +9,4 @@ build-and-push.sh
 
 # Added by cargo
 
-/target
+**/target
